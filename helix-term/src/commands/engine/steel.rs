@@ -509,7 +509,7 @@ fn load_static_commands(engine: &mut Engine, generate_sources: bool) {
         "Returns all ranges of the selection"
     );
     no_context!(
-        "range->anchor",
+        "range-anchor",
         |range: Range| range.anchor,
         "Get the anchor of the range: the side that doesn't move when extending."
     );
@@ -519,7 +519,7 @@ fn load_static_commands(engine: &mut Engine, generate_sources: bool) {
         "Get the start of the range"
     );
     no_context!(
-        "range->head",
+        "range-head",
         |range: Range| range.head,
         "Get the head of the range, moved when extending."
     );
