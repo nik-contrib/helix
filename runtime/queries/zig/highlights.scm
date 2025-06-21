@@ -309,6 +309,5 @@
 ; Comments
 
 (comment) @comment.line
-
-((comment) @comment.block.documentation
-  (#match? @comment.block.documentation "^//!"))
+(module_comment) @comment.line.documentation
+(statement_comment) @comment.line.documentation
