@@ -684,7 +684,14 @@ impl Registry {
         enable_snippets: bool,
     ) -> impl Iterator<Item = (LanguageServerName, Result<Arc<Client>>)> + 'a {
         language_config.language_servers.iter().filter_map(
-            move |LanguageServerFeatures { name, .. }| {
+            move |LanguageServerFeatures { name, roots, .. }| {
+                // if we specify e.g. `roots = [".typos.toml"]`, then the language server
+                // should not be started for a document that does not have this root.
+                log::error!("foo: {root_dirs:?} bar: {roots:?}");
+                if !roots.is_empty() && !root_dirs.iter().any(|root_dir| roots.contains(root_dir)) {
+                    return None;
+                }
+
                 if let Some(clients) = self.inner_by_name.get(name) {
                     // If the clients vec is empty, do not automatically start a client
                     // for this server. The empty vec is a tombstone left to mean that a

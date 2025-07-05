@@ -1,0 +1,6 @@
+[language-server.typos]
+command = "typos-lsp"
+
+[[language]]
+name = "rust"
+language-servers = ["rust-analyzer", { name = "typos", roots = [".typos.toml"] }]

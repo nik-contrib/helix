@@ -306,6 +306,9 @@ enum LanguageServerFeatureConfiguration {
         only_features: HashSet<LanguageServerFeature>,
         #[serde(default, skip_serializing_if = "HashSet::is_empty")]
         except_features: HashSet<LanguageServerFeature>,
+        /// These indicate project roots <.git, Cargo.toml>
+        #[serde(default, skip_serializing_if = "HashSet::is_empty")]
+        roots: HashSet<PathBuf>,
         name: String,
     },
     Simple(String),
@@ -316,6 +319,8 @@ pub struct LanguageServerFeatures {
     pub name: String,
     pub only: HashSet<LanguageServerFeature>,
     pub excluded: HashSet<LanguageServerFeature>,
+    /// These indicate project roots <.git, Cargo.toml>
+    pub roots: HashSet<PathBuf>,
 }
 
 impl LanguageServerFeatures {
@@ -342,8 +347,10 @@ where
                 only_features,
                 except_features,
                 name,
+                roots,
             } => LanguageServerFeatures {
                 name,
+                roots,
                 only: only_features,
                 excluded: except_features,
             },
@@ -367,6 +374,7 @@ where
                 only_features: features.only.clone(),
                 except_features: features.excluded.clone(),
                 name: features.name.to_owned(),
+                roots: features.roots.clone(),
             }
         };
         serializer.serialize_element(&features)?;
