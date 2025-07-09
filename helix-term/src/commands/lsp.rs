@@ -877,7 +877,7 @@ fn goto_impl(editor: &mut Editor, compositor: &mut Compositor, locations: Vec<Lo
 
 fn goto_single_impl<P, F>(cx: &mut Context, feature: LanguageServerFeature, request_provider: P)
 where
-    P: Fn(&Client, lsp::Position, lsp::TextDocumentIdentifier) -> Option<F>,
+    P: Fn(&Client, lsp::Position, lsp::TextDocumentIdentifier, Option<lsp::Range>) -> Option<F>,
     F: Future<Output = helix_lsp::Result<Option<lsp::GotoDefinitionResponse>>> + 'static + Send,
 {
     let (view, doc) = current_ref!(cx.editor);
@@ -886,7 +886,10 @@ where
         .map(|language_server| {
             let offset_encoding = language_server.offset_encoding();
             let pos = doc.position(view.id, offset_encoding);
-            let future = request_provider(language_server, pos, doc.identifier()).unwrap();
+            let range = doc.selection(view.id).primary();
+            let range = range_to_lsp_range(doc.text(), range, offset_encoding);
+            let future =
+                request_provider(language_server, pos, doc.identifier(), Some(range)).unwrap();
             async move { anyhow::Ok((future.await?, offset_encoding)) }
         })
         .collect();
@@ -939,7 +942,7 @@ pub fn goto_declaration(cx: &mut Context) {
     goto_single_impl(
         cx,
         LanguageServerFeature::GotoDeclaration,
-        |ls, pos, doc_id| ls.goto_declaration(doc_id, pos, None),
+        |ls, pos, doc_id, range| ls.goto_declaration(doc_id, pos, None, range),
     );
 }
 
@@ -947,7 +950,7 @@ pub fn goto_definition(cx: &mut Context) {
     goto_single_impl(
         cx,
         LanguageServerFeature::GotoDefinition,
-        |ls, pos, doc_id| ls.goto_definition(doc_id, pos, None),
+        |ls, pos, doc_id, range| ls.goto_definition(doc_id, pos, None, range),
     );
 }
 
@@ -955,7 +958,7 @@ pub fn goto_type_definition(cx: &mut Context) {
     goto_single_impl(
         cx,
         LanguageServerFeature::GotoTypeDefinition,
-        |ls, pos, doc_id| ls.goto_type_definition(doc_id, pos, None),
+        |ls, pos, doc_id, range| ls.goto_type_definition(doc_id, pos, None, range),
     );
 }
 
@@ -963,7 +966,7 @@ pub fn goto_implementation(cx: &mut Context) {
     goto_single_impl(
         cx,
         LanguageServerFeature::GotoImplementation,
-        |ls, pos, doc_id| ls.goto_implementation(doc_id, pos, None),
+        |ls, pos, doc_id, range| ls.goto_implementation(doc_id, pos, None, range),
     );
 }
 
@@ -976,12 +979,15 @@ pub fn goto_reference(cx: &mut Context) {
         .map(|language_server| {
             let offset_encoding = language_server.offset_encoding();
             let pos = doc.position(view.id, offset_encoding);
+            let range = doc.selection(view.id).primary();
+            let range = range_to_lsp_range(doc.text(), range, offset_encoding);
             let future = language_server
                 .goto_reference(
                     doc.identifier(),
                     pos,
                     config.lsp.goto_reference_include_declaration,
                     None,
+                    Some(range),
                 )
                 .unwrap();
             async move { anyhow::Ok((future.await?, offset_encoding)) }
@@ -1039,9 +1045,12 @@ pub fn hover(cx: &mut Context) {
         .map(|language_server| {
             let server_name = language_server.name().to_string();
             // TODO: factor out a doc.position_identifier() that returns lsp::TextDocumentPositionIdentifier
-            let pos = doc.position(view.id, language_server.offset_encoding());
+            let offset_encoding = language_server.offset_encoding();
+            let pos = doc.position(view.id, offset_encoding);
+            let range = doc.selection(view.id).primary();
+            let range = range_to_lsp_range(doc.text(), range, offset_encoding);
             let request = language_server
-                .text_document_hover(doc.identifier(), pos, None)
+                .text_document_hover(doc.identifier(), pos, None, Some(range))
                 .unwrap();
 
             async move { anyhow::Ok((server_name, request.await?)) }
@@ -1140,8 +1149,10 @@ pub fn rename_symbol(cx: &mut Context) {
 
                 let offset_encoding = language_server.offset_encoding();
                 let pos = doc.position(view.id, offset_encoding);
+                let range = doc.selection(view.id).primary();
+                let range = range_to_lsp_range(doc.text(), range, offset_encoding);
                 let future = language_server
-                    .rename_symbol(doc.identifier(), pos, input.to_string())
+                    .rename_symbol(doc.identifier(), pos, input.to_string(), Some(range))
                     .unwrap();
 
                 match block_on(future) {
@@ -1188,8 +1199,10 @@ pub fn rename_symbol(cx: &mut Context) {
         let ls_id = language_server.id();
         let offset_encoding = language_server.offset_encoding();
         let pos = doc.position(view.id, offset_encoding);
+        let range = doc.selection(view.id).primary();
+        let range = range_to_lsp_range(doc.text(), range, offset_encoding);
         let future = language_server
-            .prepare_rename(doc.identifier(), pos)
+            .prepare_rename(doc.identifier(), pos, Some(range))
             .unwrap();
         cx.callback(
             future,
@@ -1221,8 +1234,10 @@ pub fn select_references_to_symbol_under_cursor(cx: &mut Context) {
         language_server_with_feature!(cx.editor, doc, LanguageServerFeature::DocumentHighlight);
     let offset_encoding = language_server.offset_encoding();
     let pos = doc.position(view.id, offset_encoding);
+    let range = doc.selection(view.id).primary();
+    let range = range_to_lsp_range(doc.text(), range, offset_encoding);
     let future = language_server
-        .text_document_document_highlight(doc.identifier(), pos, None)
+        .text_document_document_highlight(doc.identifier(), pos, None, Some(range))
         .unwrap();
 
     cx.callback(

@@ -296,10 +296,14 @@ fn request_completions_from_language_server(
     let cursor = doc.selection(view).primary().cursor(text.slice(..));
     let pos = pos_to_lsp_pos(text, cursor, offset_encoding);
     let doc_id = doc.identifier();
+    let range = doc.selection(view).primary();
+    let range = helix_lsp::util::range_to_lsp_range(text, range, offset_encoding);
 
     // it's important that this is before the async block (and that this is not an async function)
     // to ensure the request is dispatched right away before any new edit notifications
-    let completion_response = ls.completion(doc_id, pos, None, context).unwrap();
+    let completion_response = ls
+        .completion(doc_id, pos, None, context, Some(range))
+        .unwrap();
     async move {
         let response: Option<lsp::CompletionResponse> = completion_response
             .await

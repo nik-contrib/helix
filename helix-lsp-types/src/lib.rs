@@ -1026,16 +1026,22 @@ pub struct TextDocumentPositionParams {
 
     /// The position inside the text document.
     pub position: Position,
+
+    /// The selected range within the text document, if any.
+    /// The position is typically one of the endpoints of the range.
+    pub range: Option<Range>,
 }
 
 impl TextDocumentPositionParams {
     pub fn new(
         text_document: TextDocumentIdentifier,
         position: Position,
+        range: Option<Range>,
     ) -> TextDocumentPositionParams {
         TextDocumentPositionParams {
             text_document,
             position,
+            range,
         }
     }
 }

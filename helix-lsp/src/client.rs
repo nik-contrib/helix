@@ -1031,6 +1031,7 @@ impl Client {
         position: lsp::Position,
         work_done_token: Option<lsp::ProgressToken>,
         context: lsp::CompletionContext,
+        range: Option<lsp::Range>,
     ) -> Option<impl Future<Output = Result<Option<lsp::CompletionResponse>>>> {
         let capabilities = self.capabilities.get().unwrap();
 
@@ -1041,6 +1042,7 @@ impl Client {
             text_document_position: lsp::TextDocumentPositionParams {
                 text_document,
                 position,
+                range,
             },
             context: Some(context),
             // TODO: support these tokens by async receiving and updating the choice list
@@ -1083,6 +1085,7 @@ impl Client {
         text_document: lsp::TextDocumentIdentifier,
         position: lsp::Position,
         work_done_token: Option<lsp::ProgressToken>,
+        range: Option<lsp::Range>,
     ) -> Option<impl Future<Output = Result<Option<SignatureHelp>>>> {
         let capabilities = self.capabilities.get().unwrap();
 
@@ -1093,6 +1096,7 @@ impl Client {
             text_document_position_params: lsp::TextDocumentPositionParams {
                 text_document,
                 position,
+                range,
             },
             work_done_progress_params: lsp::WorkDoneProgressParams { work_done_token },
             context: None,
@@ -1151,6 +1155,7 @@ impl Client {
         text_document: lsp::TextDocumentIdentifier,
         position: lsp::Position,
         work_done_token: Option<lsp::ProgressToken>,
+        range: Option<lsp::Range>,
     ) -> Option<impl Future<Output = Result<Option<lsp::Hover>>>> {
         let capabilities = self.capabilities.get().unwrap();
 
@@ -1167,6 +1172,7 @@ impl Client {
             text_document_position_params: lsp::TextDocumentPositionParams {
                 text_document,
                 position,
+                range,
             },
             work_done_progress_params: lsp::WorkDoneProgressParams { work_done_token },
             // lsp::SignatureHelpContext
@@ -1234,6 +1240,7 @@ impl Client {
         text_document: lsp::TextDocumentIdentifier,
         position: lsp::Position,
         work_done_token: Option<lsp::ProgressToken>,
+        range: Option<lsp::Range>,
     ) -> Option<impl Future<Output = Result<Option<Vec<lsp::DocumentHighlight>>>>> {
         let capabilities = self.capabilities.get().unwrap();
 
@@ -1247,6 +1254,7 @@ impl Client {
             text_document_position_params: lsp::TextDocumentPositionParams {
                 text_document,
                 position,
+                range,
             },
             work_done_progress_params: lsp::WorkDoneProgressParams { work_done_token },
             partial_result_params: lsp::PartialResultParams {
@@ -1267,11 +1275,13 @@ impl Client {
         text_document: lsp::TextDocumentIdentifier,
         position: lsp::Position,
         work_done_token: Option<lsp::ProgressToken>,
+        range: Option<lsp::Range>,
     ) -> impl Future<Output = Result<T::Result>> {
         let params = lsp::GotoDefinitionParams {
             text_document_position_params: lsp::TextDocumentPositionParams {
                 text_document,
                 position,
+                range,
             },
             work_done_progress_params: lsp::WorkDoneProgressParams { work_done_token },
             partial_result_params: lsp::PartialResultParams {
@@ -1287,6 +1297,7 @@ impl Client {
         text_document: lsp::TextDocumentIdentifier,
         position: lsp::Position,
         work_done_token: Option<lsp::ProgressToken>,
+        range: Option<lsp::Range>,
     ) -> Option<impl Future<Output = Result<Option<lsp::GotoDefinitionResponse>>>> {
         let capabilities = self.capabilities.get().unwrap();
 
@@ -1300,6 +1311,7 @@ impl Client {
             text_document,
             position,
             work_done_token,
+            range,
         ))
     }
 
@@ -1308,6 +1320,7 @@ impl Client {
         text_document: lsp::TextDocumentIdentifier,
         position: lsp::Position,
         work_done_token: Option<lsp::ProgressToken>,
+        range: Option<lsp::Range>,
     ) -> Option<impl Future<Output = Result<Option<lsp::GotoDefinitionResponse>>>> {
         let capabilities = self.capabilities.get().unwrap();
 
@@ -1325,6 +1338,7 @@ impl Client {
             text_document,
             position,
             work_done_token,
+            range,
         ))
     }
 
@@ -1333,6 +1347,7 @@ impl Client {
         text_document: lsp::TextDocumentIdentifier,
         position: lsp::Position,
         work_done_token: Option<lsp::ProgressToken>,
+        range: Option<lsp::Range>,
     ) -> Option<impl Future<Output = Result<Option<lsp::GotoDefinitionResponse>>>> {
         let capabilities = self.capabilities.get().unwrap();
 
@@ -1349,6 +1364,7 @@ impl Client {
             text_document,
             position,
             work_done_token,
+            range,
         ))
     }
 
@@ -1357,6 +1373,7 @@ impl Client {
         text_document: lsp::TextDocumentIdentifier,
         position: lsp::Position,
         work_done_token: Option<lsp::ProgressToken>,
+        range: Option<lsp::Range>,
     ) -> Option<impl Future<Output = Result<Option<lsp::GotoDefinitionResponse>>>> {
         let capabilities = self.capabilities.get().unwrap();
 
@@ -1373,6 +1390,7 @@ impl Client {
             text_document,
             position,
             work_done_token,
+            range,
         ))
     }
 
@@ -1382,6 +1400,7 @@ impl Client {
         position: lsp::Position,
         include_declaration: bool,
         work_done_token: Option<lsp::ProgressToken>,
+        range: Option<lsp::Range>,
     ) -> Option<impl Future<Output = Result<Option<Vec<lsp::Location>>>>> {
         let capabilities = self.capabilities.get().unwrap();
 
@@ -1395,6 +1414,7 @@ impl Client {
             text_document_position: lsp::TextDocumentPositionParams {
                 text_document,
                 position,
+                range,
             },
             context: lsp::ReferenceContext {
                 include_declaration,
@@ -1433,6 +1453,7 @@ impl Client {
         &self,
         text_document: lsp::TextDocumentIdentifier,
         position: lsp::Position,
+        range: Option<lsp::Range>,
     ) -> Option<impl Future<Output = Result<Option<lsp::PrepareRenameResponse>>>> {
         let capabilities = self.capabilities.get().unwrap();
 
@@ -1447,6 +1468,7 @@ impl Client {
         let params = lsp::TextDocumentPositionParams {
             text_document,
             position,
+            range,
         };
 
         Some(self.call::<lsp::request::PrepareRenameRequest>(params))
@@ -1507,6 +1529,7 @@ impl Client {
         text_document: lsp::TextDocumentIdentifier,
         position: lsp::Position,
         new_name: String,
+        range: Option<lsp::Range>,
     ) -> Option<impl Future<Output = Result<Option<lsp::WorkspaceEdit>>>> {
         if !self.supports_feature(LanguageServerFeature::RenameSymbol) {
             return None;
@@ -1516,6 +1539,7 @@ impl Client {
             text_document_position: lsp::TextDocumentPositionParams {
                 text_document,
                 position,
+                range,
             },
             new_name,
             work_done_progress_params: lsp::WorkDoneProgressParams {

@@ -110,8 +110,11 @@ pub fn request_signature_help(
     let future = doc
         .language_servers_with_feature(LanguageServerFeature::SignatureHelp)
         .find_map(|language_server| {
-            let pos = doc.position(view.id, language_server.offset_encoding());
-            language_server.text_document_signature_help(doc.identifier(), pos, None)
+            let offset_encoding = language_server.offset_encoding();
+            let pos = doc.position(view.id, offset_encoding);
+            let range = doc.selection(view.id).primary();
+            let range = helix_lsp::util::range_to_lsp_range(doc.text(), range, offset_encoding);
+            language_server.text_document_signature_help(doc.identifier(), pos, None, Some(range))
         });
 
     let Some(future) = future else {
